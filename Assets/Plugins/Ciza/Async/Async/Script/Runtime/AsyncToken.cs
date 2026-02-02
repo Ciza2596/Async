@@ -34,12 +34,12 @@ namespace CizaAsync
 		/// <summary>
 		/// Whether cancellation of the async operation is requested.
 		/// </summary>
-		public bool Canceled => CancellationToken.IsCancellationRequested;
+		public bool IsCanceled => CancellationToken.IsCancellationRequested;
 
 		/// <summary>
 		/// Whether completion of the async operation is requested as soon as possible, but it's not canceled.
 		/// </summary>
-		public bool Completed => !Canceled && CompletionToken.IsCancellationRequested;
+		public bool IsCompleted => !IsCanceled && CompletionToken.IsCancellationRequested;
 
 		/// <param name="cancellationToken">Source token for the cancellation scenario.</param>
 		/// <param name="completionToken">Source token for the completion scenario.</param>
@@ -55,7 +55,7 @@ namespace CizaAsync
 		/// </summary>
 		public void ThrowIfCanceled(UnityEngine.Object obj = null)
 		{
-			if (Canceled) throw new AsyncOperationCanceledException(this);
+			if (IsCanceled) throw new AsyncOperationCanceledException(this);
 			if (obj is not null && !obj) throw new AsyncOperationDestroyedException(obj);
 		}
 
@@ -78,7 +78,7 @@ namespace CizaAsync
 		public bool EnsureNotCanceledOrCompleted(UnityEngine.Object obj = null)
 		{
 			ThrowIfCanceled(obj);
-			return !Completed;
+			return !IsCompleted;
 		}
 
 		// public static implicit operator AsyncToken(CancellationToken token) => new(token);

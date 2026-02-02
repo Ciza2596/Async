@@ -9,7 +9,7 @@ namespace CizaAsync
 	{
 		public AsyncOperationCanceledException(AsyncToken token) : base(token.CancellationToken)
 		{
-			if (!token.Canceled) throw new ArgumentException("Specified token is not canceled.", nameof(token));
+			if (!token.IsCanceled) throw new ArgumentException("Specified token is not canceled.", nameof(token));
 		}
 
 		protected AsyncOperationCanceledException() { }
