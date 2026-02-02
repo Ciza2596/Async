@@ -330,6 +330,15 @@ namespace CizaAsync
 		/// <summary>
 		/// Converts the awaitable to a standard .NET task.
 		/// </summary>
+		public static async Awaitable ToAwaitable<T>(this Awaitable<T> awaitable)
+		{
+			await awaitable;
+		}
+
+
+		/// <summary>
+		/// Converts the awaitable to a standard .NET task.
+		/// </summary>
 		public static async Task ToTask(this Awaitable awaitable)
 		{
 			await awaitable;
