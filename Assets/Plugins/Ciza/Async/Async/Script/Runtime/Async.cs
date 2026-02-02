@@ -76,35 +76,35 @@ namespace CizaAsync
 		/// <summary>
 		/// Creates a continuation that executes when the target awaitable completes.
 		/// </summary>
-		public static async Awaitable Then(this Awaitable awaitable, Action action)
+		public static async Awaitable ThenAsync(this Awaitable awaitable, Action action)
 		{
 			await awaitable;
 			action();
 		}
 
 		/// <inheritdoc cref="Then"/>
-		public static async Awaitable Then(this Awaitable awaitable, Func<Awaitable> fn)
+		public static async Awaitable ThenAsync(this Awaitable awaitable, Func<Awaitable> fn)
 		{
 			await awaitable;
 			await fn();
 		}
 
 		/// <inheritdoc cref="Then"/>
-		public static async Awaitable Then<T>(this Awaitable<T> awaitable, Action<T> action)
+		public static async Awaitable ThenAsync<T>(this Awaitable<T> awaitable, Action<T> action)
 		{
 			var result = await awaitable;
 			action(result);
 		}
 
 		/// <inheritdoc cref="Then"/>
-		public static async Awaitable<R> Then<T, R>(this Awaitable<T> awaitable, Func<T, R> fn)
+		public static async Awaitable<R> ThenAsync<T, R>(this Awaitable<T> awaitable, Func<T, R> fn)
 		{
 			var result = await awaitable;
 			return fn(result);
 		}
 
 		/// <inheritdoc cref="Then"/>
-		public static async Awaitable Then<T>(this Awaitable<T> awaitable, Func<T, Awaitable> fn)
+		public static async Awaitable ThenAsync<T>(this Awaitable<T> awaitable, Func<T, Awaitable> fn)
 		{
 			var result = await awaitable;
 			await fn(result);
@@ -113,7 +113,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Switches execution to a background thread.
 		/// </summary>
-		public static async Awaitable ToBackground()
+		public static async Awaitable ToBackgroundAsync()
 		{
 			await Awaitable.BackgroundThreadAsync();
 		}
@@ -121,7 +121,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Switches execution to the main Unity thread.
 		/// </summary>
-		public static async Awaitable ToMain()
+		public static async Awaitable ToMainAsync()
 		{
 			await Awaitable.MainThreadAsync();
 		}
@@ -144,7 +144,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Waits till the end of the current render loop iteration.
 		/// </summary>
-		public static Awaitable EndOfFrame(AsyncToken token = default)
+		public static Awaitable EndOfFrameAsync(AsyncToken token = default)
 		{
 			// Remember to not use async/await here, as causes heap allocation each frame.
 			return Awaitable.EndOfFrameAsync(token.CancellationToken);
@@ -153,7 +153,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Waits till the start of the next render loop iteration.
 		/// </summary>
-		public static Awaitable NextFrame(AsyncToken token = default)
+		public static Awaitable NextFrameAsync(AsyncToken token = default)
 		{
 			// Remember to not use async/await here, as causes heap allocation each frame.
 			return Awaitable.NextFrameAsync(token.CancellationToken);
@@ -162,7 +162,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Waits until the specified number of frames are rendered.
 		/// </summary>
-		public static async Awaitable Frames(int frameCount, AsyncToken token = default)
+		public static async Awaitable FramesAsync(int frameCount, AsyncToken token = default)
 		{
 			for (int i = 0; i < frameCount; i++)
 			{
@@ -174,7 +174,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Waits for the specified duration.
 		/// </summary>
-		public static async Awaitable Delay(TimeSpan time, AsyncToken token = default)
+		public static async Awaitable DelayAsync(TimeSpan time, AsyncToken token = default)
 		{
 			var end = Time.time + time.TotalSeconds;
 			while (Time.time < end && token.EnsureNotCanceledOrCompleted())
@@ -184,7 +184,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Waits for the specified duration ignoring current timescale.
 		/// </summary>
-		public static async Awaitable DelayUnscaled(TimeSpan time, AsyncToken token = default)
+		public static async Awaitable DelayUnscaledAsync(TimeSpan time, AsyncToken token = default)
 		{
 			var end = Time.unscaledTime + time.TotalSeconds;
 			while (Time.unscaledTime < end && token.EnsureNotCanceledOrCompleted())
@@ -194,7 +194,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Waits while the specified condition is true.
 		/// </summary>
-		public static async Awaitable While(Func<bool> condition, AsyncToken token = default)
+		public static async Awaitable WhileAsync(Func<bool> condition, AsyncToken token = default)
 		{
 			while (condition())
 			{
@@ -206,7 +206,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Waits until the specified condition is true.
 		/// </summary>
-		public static async Awaitable Until(Func<bool> condition, AsyncToken token = default)
+		public static async Awaitable UntilAsync(Func<bool> condition, AsyncToken token = default)
 		{
 			while (!condition())
 			{
@@ -218,7 +218,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Returns an awaitable that completes when all the specified awaitables complete.
 		/// </summary>
-		public static async Awaitable All(IEnumerable<Awaitable> awaitables)
+		public static async Awaitable AllAsync(IEnumerable<Awaitable> awaitables)
 		{
 			var list = awaitables.ToArray();
 			var ex = default(Exception);
@@ -235,11 +235,11 @@ namespace CizaAsync
 			if (ex != null) ExceptionDispatchInfo.Capture(ex).Throw();
 		}
 
-		/// <inheritdoc cref="All(IEnumerable{Awaitable})"/>
-		public static Awaitable All(params Awaitable[] a) => All((IEnumerable<Awaitable>)a);
+		/// <inheritdoc cref="AllAsync"/>
+		public static Awaitable AllAsync(params Awaitable[] a) => AllAsync((IEnumerable<Awaitable>)a);
 
-		/// <inheritdoc cref="All(IEnumerable{Awaitable})"/>
-		public static async Awaitable<T[]> All<T>(IEnumerable<Awaitable<T>> awaitables)
+		/// <inheritdoc cref="AllAsync"/>
+		public static async Awaitable<T[]> AllAsync<T>(IEnumerable<Awaitable<T>> awaitables)
 		{
 			var list = awaitables.ToArray();
 			var results = new T[list.Length];
@@ -258,13 +258,13 @@ namespace CizaAsync
 			return results;
 		}
 
-		/// <inheritdoc cref="All(IEnumerable{Awaitable})"/>
-		public static Awaitable<T[]> All<T>(params Awaitable<T>[] a) => All((IEnumerable<Awaitable<T>>)a);
+		/// <inheritdoc cref="AllAsync"/>
+		public static Awaitable<T[]> AllAsync<T>(params Awaitable<T>[] a) => AllAsync((IEnumerable<Awaitable<T>>)a);
 
 		/// <summary>
 		/// Returns an awaitable that completes when any of the specified awaitables complete.
 		/// </summary>
-		public static Awaitable Any(IEnumerable<Awaitable> awaitables)
+		public static Awaitable AnyAsync(IEnumerable<Awaitable> awaitables)
 		{
 			var list = awaitables.ToArray();
 			var cs = new AwaitableCompletionSource();
@@ -288,11 +288,11 @@ namespace CizaAsync
 			}
 		}
 
-		/// <inheritdoc cref="Any(IEnumerable{Awaitable})"/>
-		public static Awaitable Any(params Awaitable[] a) => Any((IEnumerable<Awaitable>)a);
+		/// <inheritdoc cref="AnyAsync"/>
+		public static Awaitable AnyAsync(params Awaitable[] a) => AnyAsync((IEnumerable<Awaitable>)a);
 
-		/// <inheritdoc cref="Any(IEnumerable{Awaitable})"/>
-		public static Awaitable<T> Any<T>(IEnumerable<Awaitable<T>> awaitables)
+		/// <inheritdoc cref="AnyAsync"/>
+		public static Awaitable<T> AnyAsync<T>(IEnumerable<Awaitable<T>> awaitables)
 		{
 			var list = awaitables.ToArray();
 			var cs = new AwaitableCompletionSource<T>();
@@ -313,8 +313,8 @@ namespace CizaAsync
 			}
 		}
 
-		/// <inheritdoc cref="Any(IEnumerable{Awaitable})"/>
-		public static Awaitable<T> Any<T>(params Awaitable<T>[] a) => Any((IEnumerable<Awaitable<T>>)a);
+		/// <inheritdoc cref="AnyAsync"/>
+		public static Awaitable<T> AnyAsync<T>(params Awaitable<T>[] a) => AnyAsync((IEnumerable<Awaitable<T>>)a);
 
 		/// <summary>
 		/// Allows awaiting <see cref="ResourceRequest"/> directly to get the loaded asset.

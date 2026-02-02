@@ -52,7 +52,7 @@ namespace CizaAsync
 		/// <summary>
 		/// Waits until the current task is <see cref="Complete"/> or <see cref="Reset"/>.
 		/// </summary>
-		public async Awaitable WaitCompletion(AsyncToken token = default)
+		public async Awaitable WaitCompletionAsync(AsyncToken token = default)
 		{
 			var src = Token;
 			while (!src.IsCancellationRequested && token.EnsureNotCanceledOrCompleted())
@@ -91,10 +91,10 @@ namespace CizaAsync
 			Complete();
 		}
 
-		/// <inheritdoc cref="AsyncSource.WaitCompletion"/>
-		public async Awaitable<T> WaitResult(AsyncToken token = default)
+		/// <inheritdoc cref="AsyncSource.WaitCompletionAsync"/>
+		public async Awaitable<T> WaitResultAsync(AsyncToken token = default)
 		{
-			await WaitCompletion(token);
+			await WaitCompletionAsync(token);
 			return Result;
 		}
 
