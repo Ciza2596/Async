@@ -81,7 +81,7 @@ namespace CizaAsync
 			return !Completed;
 		}
 
-		public static implicit operator AsyncToken(CancellationToken token) => new(token);
+		// public static implicit operator AsyncToken(CancellationToken token) => new(token);
 
 		public static bool operator ==(AsyncToken left, AsyncToken right) => left.Equals(right);
 
