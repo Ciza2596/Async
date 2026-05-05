@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using UnityEngine.Scripting;
+using Object = UnityEngine.Object;
 
 namespace CizaAsync
 {
@@ -9,17 +11,17 @@ namespace CizaAsync
 		/// <summary>
 		/// A none token.
 		/// </summary>
-		public static readonly AsyncToken NONE = new(CancellationToken.None);
+		public static readonly AsyncToken NONE = new AsyncToken(CancellationToken.None);
 
 		/// <summary>
 		/// A canceled token.
 		/// </summary>
-		public static readonly AsyncToken CANCELED = new(new CancellationToken(true));
+		public static readonly AsyncToken CANCELED = new AsyncToken(new CancellationToken(true));
 
 		/// <summary>
 		/// A completed token.
 		/// </summary>
-		public static readonly AsyncToken COMPLETED = new(CancellationToken.None, new CancellationToken(true));
+		public static readonly AsyncToken COMPLETED = new AsyncToken(CancellationToken.None, new CancellationToken(true));
 
 		/// <summary>
 		/// Source token for cancellation scenario.
@@ -43,7 +45,11 @@ namespace CizaAsync
 
 		/// <param name="cancellationToken">Source token for the cancellation scenario.</param>
 		/// <param name="completionToken">Source token for the completion scenario.</param>
-		public AsyncToken(CancellationToken cancellationToken, CancellationToken completionToken = default)
+		[Preserve]
+		public AsyncToken(CancellationToken cancellationToken) : this(cancellationToken, default) { }
+
+		[Preserve]
+		public AsyncToken(CancellationToken cancellationToken, CancellationToken completionToken)
 		{
 			CancellationToken = cancellationToken;
 			CompletionToken = completionToken;
@@ -53,7 +59,10 @@ namespace CizaAsync
 		/// Throws <see cref="AsyncOperationCanceledException"/> in case cancellation is requested
 		/// or <see cref="AsyncOperationDestroyedException"/> in case specified Unity object is destroyed.
 		/// </summary>
-		public void ThrowIfCanceled(UnityEngine.Object obj = null)
+		public void ThrowIfCanceled() =>
+			ThrowIfCanceled(null);
+
+		public void ThrowIfCanceled(Object obj)
 		{
 			if (IsCanceled) throw new AsyncOperationCanceledException(this);
 			if (obj is not null && !obj) throw new AsyncOperationDestroyedException(obj);
@@ -64,7 +73,10 @@ namespace CizaAsync
 		/// or <see cref="AsyncOperationDestroyedException"/> in case specified Unity object is destroyed;
 		/// otherwise returns true.
 		/// </summary>
-		public bool EnsureNotCanceled(UnityEngine.Object obj = null)
+		public bool EnsureNotCanceled() =>
+			EnsureNotCanceled(null);
+
+		public bool EnsureNotCanceled(Object obj)
 		{
 			ThrowIfCanceled(obj);
 			return true;
@@ -75,7 +87,10 @@ namespace CizaAsync
 		/// or <see cref="AsyncOperationDestroyedException"/> in case specified Unity object is destroyed;
 		/// otherwise returns whether completion is not requested.
 		/// </summary>
-		public bool EnsureNotCanceledOrCompleted(UnityEngine.Object obj = null)
+		public bool EnsureNotCanceledOrCompleted() =>
+			EnsureNotCanceledOrCompleted(null);
+
+		public bool EnsureNotCanceledOrCompleted(Object obj)
 		{
 			ThrowIfCanceled(obj);
 			return !IsCompleted;
