@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace CizaAsync
 {
@@ -9,33 +10,32 @@ namespace CizaAsync
 	/// </summary>
 	public class AsyncSource : IDisposable
 	{
-		private CancellationTokenSource cs = new CancellationTokenSource();
+		// VARIABLE: -----------------------------------------------------------------------------
+
+		protected CancellationTokenSource _tokenSource = new CancellationTokenSource();
+
+		// PUBLIC VARIABLE: ---------------------------------------------------------------------
 
 		/// <summary>
 		/// Cancellation token associated with the current task state.
 		/// Will cancel on <see cref="Complete"/> or <see cref="Reset"/>.
 		/// </summary>
-		public CancellationToken Token => cs.Token;
+		public virtual CancellationToken Token => _tokenSource.Token;
 
 		/// <summary>
 		/// Whether the current task has completed.
 		/// </summary>
-		public bool Completed => cs.IsCancellationRequested;
+		public virtual bool IsComplete => _tokenSource.IsCancellationRequested;
 
 
-		/// <param name="completed">Whether the source should be created in the completed state.</param>
-		public AsyncSource(bool completed = false)
+		[Preserve]
+		public AsyncSource() : this(false) { }
+
+		/// <param name="isCompleted">Whether the source should be created in the completed state.</param>
+		[Preserve]
+		public AsyncSource(bool isCompleted)
 		{
-			if (completed) Complete();
-		}
-
-		/// <summary>
-		/// Transitions the source into the completed state and notifies associates tokens.
-		/// Has no effect when the source is already in completed state.
-		/// </summary>
-		public void Complete()
-		{
-			if (!Completed) cs.Cancel();
+			if (isCompleted) Complete();
 		}
 
 		/// <summary>
@@ -45,35 +45,51 @@ namespace CizaAsync
 		public virtual void Reset()
 		{
 			Complete();
-			cs.Dispose();
-			cs = new CancellationTokenSource();
+			_tokenSource.Dispose();
+			_tokenSource = new CancellationTokenSource();
+		}
+
+		/// <summary>
+		/// Transitions the source into the completed state and notifies associates tokens.
+		/// Has no effect when the source is already in completed state.
+		/// </summary>
+		public virtual void Complete()
+		{
+			if (!IsComplete)
+				_tokenSource.Cancel();
 		}
 
 		/// <summary>
 		/// Waits until the current task is <see cref="Complete"/> or <see cref="Reset"/>.
 		/// </summary>
-		public async Awaitable WaitCompletionAsync(AsyncToken token = default)
+		public async Awaitable WaitCompletionAsync(AsyncToken asyncToken)
 		{
-			var src = Token;
-			while (!src.IsCancellationRequested && token.EnsureNotCanceledOrCompleted())
+			var token = Token;
+			while (!token.IsCancellationRequested && asyncToken.EnsureNotCanceledOrCompleted())
 				await Awaitable.NextFrameAsync();
 		}
 
 		public void Dispose()
 		{
 			Complete();
-			cs.Dispose();
+			_tokenSource.Dispose();
 		}
 	}
 
 	/// <inheritdoc/>
 	public class AsyncSource<T> : AsyncSource
 	{
+		// PUBLIC VARIABLE: ---------------------------------------------------------------------
+
 		/// <summary>
 		/// Result of the completed task, or default when not completed.
 		/// </summary>
-		public T Result { get; private set; }
+		public virtual T Result { get; protected set; }
 
+
+		// CONSTRUCTOR: ------------------------------------------------------------------------
+
+		[Preserve]
 		public AsyncSource() { }
 
 		/// <summary>
@@ -84,24 +100,26 @@ namespace CizaAsync
 			Result = result;
 		}
 
+		// PUBLIC METHOD: ----------------------------------------------------------------------
+
+		public override void Reset()
+		{
+			Result = default;
+			base.Reset();
+		}
+
 		/// <inheritdoc cref="Complete"/>
-		public void Complete(T result)
+		public virtual void Complete(T result)
 		{
 			Result = result;
 			Complete();
 		}
 
 		/// <inheritdoc cref="AsyncSource.WaitCompletionAsync"/>
-		public async Awaitable<T> WaitResultAsync(AsyncToken token = default)
+		public virtual async Awaitable<T> WaitResultAsync(AsyncToken asyncToken)
 		{
-			await WaitCompletionAsync(token);
+			await WaitCompletionAsync(asyncToken);
 			return Result;
-		}
-
-		public override void Reset()
-		{
-			Result = default;
-			base.Reset();
 		}
 	}
 }
