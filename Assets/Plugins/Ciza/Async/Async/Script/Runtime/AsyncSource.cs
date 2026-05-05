@@ -12,7 +12,7 @@ namespace CizaAsync
 	{
 		// VARIABLE: -----------------------------------------------------------------------------
 
-		protected CancellationTokenSource _tokenSource = new CancellationTokenSource();
+		protected CancellationTokenSource _source = new CancellationTokenSource();
 
 		// PUBLIC VARIABLE: ---------------------------------------------------------------------
 
@@ -20,13 +20,15 @@ namespace CizaAsync
 		/// Cancellation token associated with the current task state.
 		/// Will cancel on <see cref="Complete"/> or <see cref="Reset"/>.
 		/// </summary>
-		public virtual CancellationToken Token => _tokenSource.Token;
+		public virtual CancellationToken Token => _source.Token;
 
 		/// <summary>
 		/// Whether the current task has completed.
 		/// </summary>
-		public virtual bool IsComplete => _tokenSource.IsCancellationRequested;
+		public virtual bool IsComplete => _source.IsCancellationRequested;
 
+
+		// CONSTRUCTOR: ------------------------------------------------------------------------
 
 		[Preserve]
 		public AsyncSource() : this(false) { }
@@ -38,6 +40,8 @@ namespace CizaAsync
 			if (isCompleted) Complete();
 		}
 
+		// PUBLIC METHOD: ----------------------------------------------------------------------
+
 		/// <summary>
 		/// Resets the source to the default uncompleted state and recreates the tokens source.
 		/// Will complete the previous state and associated tokens source in case it was not completed.
@@ -45,8 +49,8 @@ namespace CizaAsync
 		public virtual void Reset()
 		{
 			Complete();
-			_tokenSource.Dispose();
-			_tokenSource = new CancellationTokenSource();
+			_source.Dispose();
+			_source = new CancellationTokenSource();
 		}
 
 		/// <summary>
@@ -56,23 +60,26 @@ namespace CizaAsync
 		public virtual void Complete()
 		{
 			if (!IsComplete)
-				_tokenSource.Cancel();
+				_source.Cancel();
 		}
 
 		/// <summary>
 		/// Waits until the current task is <see cref="Complete"/> or <see cref="Reset"/>.
 		/// </summary>
-		public async Awaitable WaitCompletionAsync(AsyncToken asyncToken)
+		public virtual Awaitable WaitCompletionAsync() =>
+			WaitCompletionAsync(AsyncToken.NONE);
+
+		public virtual async Awaitable WaitCompletionAsync(AsyncToken asyncToken)
 		{
 			var token = Token;
 			while (!token.IsCancellationRequested && asyncToken.EnsureNotCanceledOrCompleted())
 				await Awaitable.NextFrameAsync();
 		}
 
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Complete();
-			_tokenSource.Dispose();
+			_source.Dispose();
 		}
 	}
 
@@ -95,10 +102,9 @@ namespace CizaAsync
 		/// <summary>
 		/// Creates the source in the completed state with the specified result.
 		/// </summary>
-		public AsyncSource(T result) : base(true)
-		{
+		public AsyncSource(T result) : base(true) =>
 			Result = result;
-		}
+
 
 		// PUBLIC METHOD: ----------------------------------------------------------------------
 
@@ -116,6 +122,9 @@ namespace CizaAsync
 		}
 
 		/// <inheritdoc cref="AsyncSource.WaitCompletionAsync"/>
+		public virtual Awaitable<T> WaitResultAsync() =>
+			WaitResultAsync(AsyncToken.NONE);
+
 		public virtual async Awaitable<T> WaitResultAsync(AsyncToken asyncToken)
 		{
 			await WaitCompletionAsync(asyncToken);
